@@ -1,3 +1,4 @@
+.idea/**
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -6,6 +7,12 @@ __pycache__/
 # C extensions
 *.so
 
+datasets
+
+Untitled.ipynb
+Untitled1.ipynb
+
+try.py
 # Distribution / packaging
 .Python
 build/
@@ -91,12 +98,8 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
-
-# Celery stuff
+# celery beat schedule file
 celerybeat-schedule
-celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
@@ -127,3 +130,33 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Creepy Data - ignore data, it's too big
+Creepy\ Data.nosync
+Creepy\ Data
+
+# More files I want to ignore
+model_nosleep2020.bin
+nosleep2020.txt
+nosleep2020.train
+nosleep2020.valid
+word2vec.model
+
+# hidden files
+.DS_Store
+.gitattributes
+
+pickles
+pickles.zip
+
+.ipynb
+.Rhistory
+
+node_modules
+
+my_logs
+
+Code/Download
+Code/.vector_cache
+
+neuralcoref
