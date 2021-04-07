@@ -103,7 +103,11 @@ def get_pitts_text(driver, debug=False):
                 title_str = title.get_text()
                 if all(not title_str.startswith(prefix) for prefix in ignore_prefix):
                     origin = title.findNextSibling()
+                    # special case I.
+                    if origin.name == "a":
+                        origin = origin.find("h3")
                     text = get_consecutive_texts(origin)
+                    # special case II. they would not overlap
                     if origin.name == "i" and origin.find("h3") is not None:
                         origin = origin.find("h3")
                     if not debug:
@@ -138,7 +142,7 @@ def export_jsonl():
         for url, atuText in visited_texts.items():
             for text in atuText.texts:
                 # ignore broken ones (without text)
-                if text.text:
+                if text.text.strip():
                     f.write(json.dumps({
                         "atu": atuText.atu.strip(),
                         "desc": atuText.desc.strip(),
@@ -181,4 +185,4 @@ def debug(url):
 
 if __name__ == '__main__':
     main()
-    # debug("http://www.pitt.edu/~dash/type0001.html")
+    # debug("http://www.pitt.edu/~dash/type1430.html")

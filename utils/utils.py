@@ -6,20 +6,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from scripts.folklores import getTextFolklore
-from SBERT import get_SBert_from_dict
 from matplotlib.colors import ListedColormap
 
 
-def getTSNE(vec: Union[np.ndarray, list], n_components=3):
-    """
-    if type(vec) is list, used as df["col"].to_list()
-    """
+def getTSNE(vec: Union[np.ndarray, list], n_components = 3, perplexity = 30):
     if type(vec) is not list:
         assert len(vec.shape) in [1, 2]
         if len(vec.shape) == 1:
             vec = vec.reshape(1, -1)
-
-    tsne = TSNE(perplexity=30,
+    tsne = TSNE(perplexity=perplexity,
                 learning_rate=50,
                 n_components=n_components,
                 n_iter=5000)
@@ -27,15 +22,13 @@ def getTSNE(vec: Union[np.ndarray, list], n_components=3):
     return tsne.fit_transform(vec)
 
 
-def plot_emb(emb, c_label, c_list=None, title="", projection=True):
+def plot_embed(emb, c_label, c_list=None, title = "", projection=True):
     """
-  c_label: color label
-  c_list: list of numbers, if not provided, generated from 0 - unique(c_label)
-  """
-    # labels must be used as python list
-    uniq_c_labels: list = np.unique(c_label).tolist()
+    c_label: color label
+    c_list: list of numbers, if not provided, generated from 0 - unique(c_label)
+    """
+    uniq_c_labels = np.unique(c_label).tolist()
     if c_list is None:
-        # mapping from label to an int
         unique_labels = {
             label: number
             for number, label in enumerate(uniq_c_labels)
@@ -43,19 +36,18 @@ def plot_emb(emb, c_label, c_list=None, title="", projection=True):
         c_list = [unique_labels[label] for label in c_label]
     assert len(c_list) == len(c_label)
 
-    sns.set(style="darkgrid")
+    from matplotlib.colors import ListedColormap
+
+    sns.set(style = "darkgrid")
 
     fig = plt.figure()
     fig.set_size_inches(18.5, 10.5)
     if projection:
-        # 3D plot
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection = '3d')
     else:
-        # 2D plot
         ax = fig.add_subplot(111)
+    hsv_modified = plt.cm.get_cmap("Set3", len(uniq_c_labels))
 
-    # get | c_list | colors from hsv
-    hsv_modified = plt.cm.get_cmap("hsv", len(c_list))
     colors = ListedColormap(hsv_modified(np.linspace(0, 1, len(c_list))))
 
     ax.set_xlabel("x")
@@ -63,16 +55,39 @@ def plot_emb(emb, c_label, c_list=None, title="", projection=True):
     if projection:
         ax.set_zlabel("z")
     scatter = ax.scatter(
-        # emb (N, d)
-        # *emb.T => (d, N) unpack as d N-dim vecs
         *emb.T,
         c=c_list,
         cmap=colors
     )
-    # for each c in c_list (0 - | uniq label |), get label of uniq_c_labels
     plt.legend(handles=scatter.legend_elements()[0], labels=uniq_c_labels)
     plt.title(title)
-    plt.show()
+    return ax
+
+def write_format_embeddings_comparators(df, indexes=None):
+    """
+    https://arxiv.org/pdf/1912.04853.pdf
+    vector file is vector
+    metafile is index
+    map ith row of meta(index) to ith row of vector
+
+    df: dataframe with columan name LF & SBERT
+    groupby indexes
+    """
+    if indexes is None:
+        indexes = ["LF", "SBERT"]
+    with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/vectors_SBERT.tsv", "w") as f_vec_SBERT:
+        with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/vectors_LF.tsv", "w") as f_vec_LF:
+            with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/atu.tsv", "w") as f_atu:
+                gb = df.groupby(indexes)
+                for group in gb.groups:
+                    r = gb.get_group(group)
+                    for emb, f in zip(["LF", "SBERT"], [f_vec_LF, f_vec_SBERT]):
+                        f.write("\t".join(map(str, r[emb].mean())))
+                        f.write("\n")
+                    f_atu.write(group[0] + "(" + group[1] + ")")
+                    f_atu.write("\n")
+
+
 
 
 if __name__ == "__main__":
