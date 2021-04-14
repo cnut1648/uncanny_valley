@@ -9,7 +9,7 @@ from scripts.folklores import getTextFolklore
 from matplotlib.colors import ListedColormap
 
 
-def getTSNE(vec: Union[np.ndarray, list], n_components = 3, perplexity = 30):
+def getTSNE(vec: Union[np.ndarray, list], n_components=3, perplexity=30):
     if type(vec) is not list:
         assert len(vec.shape) in [1, 2]
         if len(vec.shape) == 1:
@@ -22,7 +22,7 @@ def getTSNE(vec: Union[np.ndarray, list], n_components = 3, perplexity = 30):
     return tsne.fit_transform(vec)
 
 
-def plot_embed(emb, c_label, c_list=None, title = "", projection=True):
+def plot_embed(emb, c_label, c_list=None, title="", projection=True):
     """
     c_label: color label
     c_list: list of numbers, if not provided, generated from 0 - unique(c_label)
@@ -38,12 +38,12 @@ def plot_embed(emb, c_label, c_list=None, title = "", projection=True):
 
     from matplotlib.colors import ListedColormap
 
-    sns.set(style = "darkgrid")
+    sns.set(style="darkgrid")
 
     fig = plt.figure()
     fig.set_size_inches(18.5, 10.5)
     if projection:
-        ax = fig.add_subplot(111, projection = '3d')
+        ax = fig.add_subplot(111, projection='3d')
     else:
         ax = fig.add_subplot(111)
     hsv_modified = plt.cm.get_cmap("Set3", len(uniq_c_labels))
@@ -62,6 +62,7 @@ def plot_embed(emb, c_label, c_list=None, title = "", projection=True):
     plt.legend(handles=scatter.legend_elements()[0], labels=uniq_c_labels)
     plt.title(title)
     return ax
+
 
 def write_format_embeddings_comparators(df, indexes=None):
     """
@@ -88,6 +89,13 @@ def write_format_embeddings_comparators(df, indexes=None):
                     f_atu.write("\n")
 
 
+def top_k_most_similar(cos_matrix, idx, k=10):
+    """
+    return len-k indices of k most similar
+    i.e. for cos metric, the best is 1
+    choose the top-k, no order
+    """
+    return np.argpartition(cos_matrix[idx].flatten().numpy(), -k)[-k:]
 
 
 if __name__ == "__main__":

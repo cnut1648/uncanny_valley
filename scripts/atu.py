@@ -2,10 +2,15 @@
 for ATU index dataset, scraped from library guides
 See libraryguides scraper
 """
+from typing import Union, List
+
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
+import plotly.express as px
 
-from utils.Embeddings import get_SBert_avg, get_LF_avg
+from utils.Embeddings import get_SBert_avg, get_LF_avg, MultiheadAttPoolLayer
+from utils.utils import getTSNE
 
 
 def cleanMFTD(df, MFTD, others: list):
@@ -57,7 +62,7 @@ def cleanMFTD(df, MFTD, others: list):
     return MFTD
 
 
-def read_text_ATU(df, atu: str, sample_size: int = 2):
+def read_text_ATU(df, atu: Union[str, List[int]], sample_size: int = 2):
     """
     read `sample_size` from the atu = `atu`
 
@@ -78,7 +83,11 @@ def read_text_ATU(df, atu: str, sample_size: int = 2):
 
     to have text wrapping
     """
-    x = df.query("atu == @atu").sample(sample_size)["text"]
+    if type(atu) is str:
+        x = df.query("atu == @atu").sample(sample_size)["text"]
+    else:
+        assert len(atu) == 2
+        x = df.iloc[atu]["text"]
     print(x.iloc[0])
     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
     print(x.iloc[1])
@@ -90,19 +99,114 @@ def top_k_of_ATU(df, k=10):
     """
     return df.groupby(["atu", "desc"]).count()["title"].sort_values(ascending=False)[:k]
 
-def load_ATU(useHDF5 = True):
+def emb_ATU_by_attn(df, n_heads = 2, by_emb: str = "LF"):
+    """
+    for ATU index I, pick random sample story s from I
+    pool I into one emb by multi-head self attn
+    return df with len |unique(ATU)|
+    """
+    newdf = []
+    for atu in np.unique(df["atu"]):
+        I = df[df["atu"] == atu]
+        s = I.sample(1).iloc[0]
+        desc = s["desc"]
+        # (1, 768 )
+        s = torch.Tensor(s[by_emb]).unsqueeze(0)
+        _, d_q_original = s.shape
+        # (1, #stories, 768)
+        I = torch.Tensor(I[by_emb].tolist()).unsqueeze(0)
+        _, len_q, d_k_original = I.shape
+
+        pooler = MultiheadAttPoolLayer(
+            n_heads, d_q_original, d_k_original
+        )
+
+        # (1, n_head * d_v = d_k)
+        # (n_head * 1, #stories)
+        ATU_emb, attn_weights = pooler(s, I, mask=None)
+        newdf.append([atu, desc, ATU_emb.detach().squeeze().numpy(), attn_weights.detach().numpy()])
+    return pd.DataFrame(newdf, columns=["atu", "desc", "emb", "attn_weights"])
+
+def get_ATU_motif(index: int):
+    if 1 <= index <= 299:
+        return "Animal Tales"
+    elif 300 <= index <= 749:
+        return "Tales of Magic"
+    elif 750 <= index <= 849:
+        return "Religious Tales"
+    elif 850 <= index <= 999:
+        return "Realisitc Tales"
+    elif 1000 <= index <= 1169:
+        return "TALES OF THE STUPID OGRE (GIANT, DEVIL)"
+    elif 1200 <= index <= 1999:
+        return "Anecdotes and Jokes"
+    elif 2000 <= index <= 2399:
+        return "Formula Tales"
+    return "NOT FOUND"
+
+def extract_stories_with_valid_ATU(df):
+    def has_valid_ATU_motif(str):
+        try:
+            return True if get_ATU_motif(int(str)) != "NOT FOUND" else False
+        except:
+            return False
+
+    return df[df["atu"].apply(has_valid_ATU_motif)]
+
+def tsne_visualization(df,
+                       useHDF5=True,
+                       filter_no: int = 10,
+                       save_key="SBERT&LF",
+                       load_key=None,
+                       perplexities=None):
+    """
+
+    Parameters
+    ----------
+    df
+    useHDF5
+    filter_no only shows ATU indexes with number of stories > filter_no
+    perplexities
+
+    Returns
+    -------
+
+    """
+    # can't be all None
+    if load_key is None:
+        assert save_key is not None
+        load_key = save_key
+
+    if perplexities is None:
+        perplexities = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200]
+    if useHDF5:
+        df_tsne = pd.read_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key=load_key)
+    else:
+        df_tsne = df.copy()
+        for perplexity in tqdm(perplexities):
+            for emb in ["LF", "SBERT"]:
+                emb_2d = getTSNE(df[emb].to_list(), 2, perplexity=perplexity)
+                emb_2d = np.array(emb_2d[:, np.newaxis]).tolist()
+                df_tsne = pd.concat([df_tsne, pd.DataFrame(emb_2d, columns=[f"{emb}_{perplexity}"])], axis=1)
+        df_tsne.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key=save_key)
+
+    # filter atu with > `filter_no` stories
+    df_tsne = df_tsne.loc[df_tsne.groupby("atu")["atu"].filter(lambda g: len(g) > filter_no).index]
+    color = df_tsne["atu"] + "(" + df_tsne["desc"] + ")"
+
+    for perplexity in perplexities:
+        for emb in ["LF", "SBERT"]:
+            embeddings = np.array(df_tsne[f"{emb}_{perplexity}"].tolist())
+            fig = px.scatter(x=embeddings[:, 0], y=embeddings[:, 1], color=color, title=f"{emb}_{perplexity}")
+            fig.show()
+
+
+def load_ATU(useHDF5=True):
     """ TODO
     merge MFTD & df
      """
-    pass
-
-
-if __name__ == '__main__':
-    useHDF5 = True
-
     if useHDF5:
-        df = pd.read_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key="SBERT&LF")
-        MFTD = pd.read_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/MFTD.h5", key="SBERT&LF")
+        df = pd.read_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key="SBERT&LF_MERGE")
 
     else:
         # processing from source and save as h5
@@ -111,7 +215,10 @@ if __name__ == '__main__':
         df = pd.read_json("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.jl", lines=True)
         df[["LF", "SBERT"]] = df.apply(lambda row: (
             get_SBert_avg(row["text"]),
-            get_LF_avg(row["text"])), axis=1, result_type="expand")
+            get_LF_avg(row["text"])
+        ), axis=1, result_type="expand")
+        df.at[:, "language"] = "language"
+        df.at[:, "from_xml"] = False
         df.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key="SBERT&LF")
 
         # MFTD
@@ -120,11 +227,26 @@ if __name__ == '__main__':
         # right now ignore others
         others = []
         MFTD = cleanMFTD(df, MFTD, others)
+        # retain only English text
+        MFTD = MFTD[MFTD["language"] == "English"]
+        MFTD[["LF", "SBERT"]] = MFTD.apply(lambda row: (
+            get_SBert_avg(row["text"]),
+            get_LF_avg(row["text"])), axis=1, result_type="expand")
         MFTD.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/MFTD.h5", key="SBERT&LF")
 
-    print(df.sample(3))
-    print(MFTD.sample(3))
-    print("Same ATU indexes after processing")
-    print(len(
-        set(MFTD.query("language == 'English'")["atu"]).intersection(set(df["atu"]))
-    ))
+        df = pd.concat([df, MFTD])
+        df.reset_index(drop=True, inplace=True)
+        df.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5",
+                  key="SBERT&LF_MERGE")
+
+        print(df.sample(3))
+        print(MFTD.sample(3))
+        print("Same ATU indexes after processing")
+        print(len(
+            set(MFTD.query("language == 'English'")["atu"]).intersection(set(df["atu"]))
+        ))
+
+
+if __name__ == '__main__':
+    useHDF5 = True
+    df = load_ATU(useHDF5=useHDF5)
