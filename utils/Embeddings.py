@@ -6,6 +6,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
+import gensim
 from torch import nn as nn
 
 from config import SBERT_MODEL_NAME
@@ -14,6 +15,11 @@ from utils.types import FolkLoreData, FolkLoreEmb, FolkLoreEmbCoarse
 nlp = en_core_web_sm.load()
 sbert_model = SentenceTransformer(SBERT_MODEL_NAME)
 
+from transformers import LongformerModel, LongformerTokenizerFast, LongformerConfig
+LFconfig = LongformerConfig.from_pretrained('allenai/longformer-base-4096')
+LF_model = LongformerModel.from_pretrained('allenai/longformer-base-4096', config = LFconfig)
+LF_tokenizer = LongformerTokenizerFast.from_pretrained('allenai/longformer-base-4096')
+LF_tokenizer.model_max_length = LF_model.config.max_position_embeddings
 
 class MatrixVectorScaledDotProductAttention(nn.Module):
 
@@ -103,6 +109,31 @@ def get_LF_avg(doc: str):
 	outputs = LF_model(**inputs)
 	return outputs["pooler_output"].detach()[0]
 
+def save_Doc2Vec_from_df(df, text_col,
+						vector_size=768,
+						min_count=5,
+						):
+	"""
+	Parameters
+	----------
+	df contains text
+	text_col col name of text
+	vector_size resulting vector size
+	min_count ignore too rare words in text
+
+	Returns
+	-------
+
+	"""
+	corpus = []
+	for i, row in tqdm(df.iterrows()):
+		tokens = gensim.utils.simple_preprocess(row[text_col])
+		corpus.append(gensim.models.doc2vec.TaggedDocument(tokens, [i]))
+	model = gensim.models.doc2vec.Doc2Vec(vector_size=vector_size, min_count=min_count, epochs=40)
+	model.build_vocab(corpus)
+	model.train(corpus, total_examples=model.corpus_count, epochs=model.epochs)
+	model.save("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/gensim")
+	model = gensim.models.Doc2Vec.load("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/gensim")
 
 def get_SBert_from_file(path: Path) -> np.ndarray:
 	with path.open() as f:

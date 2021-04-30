@@ -127,7 +127,12 @@ def emb_ATU_by_attn(df, n_heads = 2, by_emb: str = "LF"):
         newdf.append([atu, desc, ATU_emb.detach().squeeze().numpy(), attn_weights.detach().numpy()])
     return pd.DataFrame(newdf, columns=["atu", "desc", "emb", "attn_weights"])
 
-def get_ATU_motif(index: int):
+def get_ATU_motif(index: Union[str, int]):
+    if type(index) is str:
+        try:
+            index = int(index)
+        except:
+            return "NOT FOUND"
     if 1 <= index <= 299:
         return "Animal Tales"
     elif 300 <= index <= 749:
