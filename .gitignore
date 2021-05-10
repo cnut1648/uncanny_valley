@@ -4,12 +4,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+*.h5
 # C extensions
 *.so
 
 datasets
 
-Untitled.ipynb
+tune/Untitled.ipynb
 Untitled1.ipynb
 
 try.sh
