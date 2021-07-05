@@ -28,7 +28,7 @@ def get_data(
     """
     if preprocess is None:
         preprocess = []
-    atu = pd.read_hdf("ATU.h5", key="SBERT&LF_MERGE")
+    atu = pd.read_hdf("../datasets/ATU.h5", key="SBERT&LF_MERGE")
     if filter_no:
         assert type(filter_no) is int
         atu = atu.loc[atu.groupby("atu")["atu"].filter(lambda g: len(g) >= filter_no).index]

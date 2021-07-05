@@ -21,6 +21,7 @@ LF_model = LongformerModel.from_pretrained('allenai/longformer-base-4096', confi
 LF_tokenizer = LongformerTokenizerFast.from_pretrained('allenai/longformer-base-4096')
 LF_tokenizer.model_max_length = LF_model.config.max_position_embeddings
 
+
 class MatrixVectorScaledDotProductAttention(nn.Module):
 
 	def __init__(self, temperature, attn_dropout=0.1):
@@ -169,4 +170,5 @@ def get_emb_from_dict(folklore_data: FolkLoreData, coarse=False, method="SBert")
 				else:
 					folklore2emb[folklore][text] = get_LF_from_file(text)
 	return folklore2emb
+
 

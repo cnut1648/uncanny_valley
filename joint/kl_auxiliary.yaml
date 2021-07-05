@@ -1,0 +1,10 @@
+train:
+    train_batch_size: 2
+    eval_batch_size: 2
+    acc_batch: 4
+    epoch: 20
+data:
+    atu_filter_no: 10
+model:
+    arch: roberta-large
+    num_labels: 7

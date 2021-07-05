@@ -158,26 +158,34 @@ def extract_stories_with_valid_ATU(df):
 
     return df[df["atu"].apply(has_valid_ATU_motif)]
 
-def tsne_visualization(df,
+def tsne_visualization(df=None,
                        useHDF5=True,
                        filter_no: int = 10,
+                       emb_ls=None,
+                       saved_h5_path="path",
                        save_key="SBERT&LF",
                        load_key=None,
+                       use_motif=False,
                        perplexities=None):
+    #    filter_no
     """
-
+    run TSNE with different perplexities and visualize by plotly
     Parameters
     ----------
-    df
-    useHDF5
+    df df with emb col, save different perplexities 2d array to (saved_h5_poth, key=save_key)
+    useHDF5 if true, no need df, but load from (saved_h5_poth, key=load_key)
     filter_no only shows ATU indexes with number of stories > filter_no
-    perplexities
+    emb_ls list of cols that are emb eg. ["LF, "SBERT"]
+    use_motif if true, the color is motif, if not the color is ATU individual index
+    perplexities list of perplexities to try
 
     Returns
     -------
-
+    None, visualize
     """
     # can't be all None
+    if emb_ls is None:
+        emb_ls = ["emb"]
     if load_key is None:
         assert save_key is not None
         load_key = save_key
@@ -185,22 +193,27 @@ def tsne_visualization(df,
     if perplexities is None:
         perplexities = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200]
     if useHDF5:
-        df_tsne = pd.read_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key=load_key)
+        df_tsne = pd.read_hdf(saved_h5_path, key=load_key)
     else:
+        assert df is not None
         df_tsne = df.copy()
         for perplexity in tqdm(perplexities):
-            for emb in ["LF", "SBERT"]:
+            for emb in emb_ls:
                 emb_2d = getTSNE(df[emb].to_list(), 2, perplexity=perplexity)
                 emb_2d = np.array(emb_2d[:, np.newaxis]).tolist()
                 df_tsne = pd.concat([df_tsne, pd.DataFrame(emb_2d, columns=[f"{emb}_{perplexity}"])], axis=1)
-        df_tsne.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key=save_key)
+        df_tsne.to_hdf(saved_h5_path, key=save_key)
 
     # filter atu with > `filter_no` stories
-    df_tsne = df_tsne.loc[df_tsne.groupby("atu")["atu"].filter(lambda g: len(g) > filter_no).index]
-    color = df_tsne["atu"] + "(" + df_tsne["desc"] + ")"
+    if filter_no > 0:
+        df_tsne = df_tsne.loc[df_tsne.groupby("atu")["atu"].filter(lambda g: len(g) > filter_no).index]
+    if use_motif:
+        color = df_tsne["motif"]
+    else:
+        color = df_tsne["atu"] + "(" + df_tsne["desc"] + ")"
 
     for perplexity in perplexities:
-        for emb in ["LF", "SBERT"]:
+        for emb in emb_ls:
             embeddings = np.array(df_tsne[f"{emb}_{perplexity}"].tolist())
             fig = px.scatter(x=embeddings[:, 0], y=embeddings[:, 1], color=color, title=f"{emb}_{perplexity}")
             fig.show()
