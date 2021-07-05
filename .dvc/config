@@ -2,3 +2,5 @@
     remote = ssh
 ['remote "ssh"']
     url = ssh://jiashu@ink-molly.usc.edu/~
+    user = jiashu
+    port = 22000
