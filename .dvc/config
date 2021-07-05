@@ -1,0 +1,4 @@
+[core]
+    remote = ssh
+['remote "ssh"']
+    url = ssh://jiashu@ink-molly.usc.edu/~
