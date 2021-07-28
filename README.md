@@ -141,6 +141,18 @@ atu   desc                                                        counts
 1540  The student from Paradise (Paris)                           20
 ```
 
+And this is the frequency of each atu motif
+
+```
+Tales of Magic                             0.362126
+Animal Tales                               0.219269
+Anecdotes and Jokes                        0.215947
+Realisitc Tales                            0.069767
+Religious Tales                            0.056478
+Formula Tales                              0.046512
+TALES OF THE STUPID OGRE (GIANT, DEVIL)    0.029900
+```
+
 
 
 
@@ -154,4 +166,9 @@ although there are some clustering among these 7 ATU indexs, it is generally dif
 [for the code that generate the above graph, see `scripts/atu.py::tsne_visualization`]
 
 
-What’s more, clustering on
+What’s more, clustering on atu motif is also difficult
+
+for example, here we are using T-SNE with Longformer embeddings and each stories blend together and thus making clustering difficult
+
+![image-20210727180505770](imgs/atu/image-20210727180505770.png)
+
