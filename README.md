@@ -1,3 +1,64 @@
+```
+# 82.55813953488372
+# https://wandb.ai/cnut1648/folklore/runs/1t2sfytd/logs?workspace=user-cnut1648
+# tokenizer len = 128
+# BEST_CKPT = "/home/jiashu/uncanny_valley/motif/huggingface/outs/ckpt/20/checkpoint-950"
+
+
+# tokenizer len = 512
+https://wandb.ai/cnut1648/folklore/runs/33lkrudp/overview?workspace=user-cnut1648
+BEST_CKPT = "/home/jiashu/uncanny_valley/motif/huggingface/outs/ckpt/30/checkpoint-183"
+
+
+# new dataset
+
+
+# 0.8522
+roberta
+https://wandb.ai/cnut1648/motif/runs/3ffta2u6/overview?workspace=user-cnut1648
+BEST_CKPT = "/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/32"
+/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-10_test-0.2
+
+https://wandb.ai/cnut1648/motif/runs/27u0cwev?workspace=user-cnut1648
+0.8571428571428571
+BEST_CKPT = "/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/72"
+/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-10_test-0.2
+
+LF
+https://wandb.ai/cnut1648/motif/runs/2ll4vfnb/overview?workspace=user-cnut1648
+0.8768472906403941
+TDATA_PATH = "/home/jiashu/uncanny_valley/datasets/motif/allenai/longformer-base-4096/filter-10_test-0.2"
+ckpt_path = "/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/25"
+
+https://wandb.ai/cnut1648/motif/runs/3pywz91i?workspace=user-cnut1648
+0.8768472906403941
+TDATA_PATH = "/home/jiashu/uncanny_valley/datasets/motif/allenai/longformer-base-4096/filter-10_test-0.2"
+ckpt_path = "/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/79"
+
+
+
+no filter
+ROBERTA
+https://wandb.ai/cnut1648/motif/runs/3u2c26zj
+0.8167
+"/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/88"
+/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-0_test-0.2
+
+
+ROBERTA
+https://wandb.ai/cnut1648/motif/runs/3bgom5bw?workspace=user-cnut1648
+0.8063
+"/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/91"
+/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-0_test-0.2
+
+LF
+https://wandb.ai/cnut1648/motif/runs/azifesfw?workspace=user-cnut1648
+0.8115
+"/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/99"
+/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-0_test-0.2
+```
+
+
 # folder hierarchy
 
 Folders:
@@ -51,6 +112,8 @@ Also we claims that this is not only because the luck of picking the best perple
 ## 1. dataset
 
 We explore the folklores scraped from the [library guides](https://libraryguides.missouri.edu/c.php?g=1052498&p=7642280) plus [MFTD](https://sites.ualberta.ca/~urban/Projects/English/Content/ATU_Tales.htm), and put the results in the `ATU.h5`in the key `default`
+
+The key `raw` contains all cleaned 1892 texts
 
 for details see `scripts/atu.py`
 

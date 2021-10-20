@@ -9,7 +9,14 @@ __pycache__/
 *.so
 
 **/wandb/
+datasets
 
+notebooks
+
+**/outs/**
+.vscode
+**/outs/**
+**/selected_ckpt/**
 
 tune/Untitled.ipynb
 Untitled1.ipynb

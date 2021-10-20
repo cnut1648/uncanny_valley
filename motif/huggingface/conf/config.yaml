@@ -1,0 +1,40 @@
+defaults:
+  - hydra: default
+  - model: roberta-large
+
+train:
+    train_batch_size: 4
+    eval_batch_size: 4
+    # model output dir
+    output_dir: ${work_dir}/outs/ckpt
+    acc_batch: 4
+    epoch: 40
+    lr: 1E-5
+    wd: 0.02
+    label_smooth: 0.0
+    warmup: 500
+    metric: accuracy
+    early_stopping_patience: 5
+
+data:
+    atu_filter_no: 0
+    cached_dir: ${dataset_dir}/motif/${model.arch}/filter-${.atu_filter_no}_test-${.test_ratio}
+    h5_file: ${dataset_dir}/ATU.h5
+    h5_key: default
+    test_ratio: 0.2
+
+model:
+    # total 7 motif
+    num_labels: 7
+
+logger:
+    project: motif
+    tags:
+        - ${model.arch}
+        - fine-tune
+        - filter-${data.atu_filter_no}
+    group: fine-tune
+
+seed: 42
+work_dir: ${hydra:runtime.cwd}
+dataset_dir: /home/jiashu/uncanny_valley/datasets

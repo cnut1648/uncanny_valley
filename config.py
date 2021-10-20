@@ -1,7 +1,7 @@
 from pathlib import Path
 
 # project dir
-BASE_DIR: Path = Path("/content/drive/MyDrive/Creepy Data")
+BASE_DIR: Path = Path(__file__)
 # where the data is
 DATASET_DIR: Path = BASE_DIR / "folklores" / "raw data"
 

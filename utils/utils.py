@@ -97,6 +97,13 @@ def top_k_most_similar(cos_matrix, idx, k=10):
     """
     return np.argpartition(cos_matrix[idx].flatten().numpy(), -k)[-k:]
 
+def load_motif_mapping(path="datasets/label-mapping.txt") -> dict:
+    ret = {}
+    with open(path) as f:
+        for line in f:
+            motif, label = line.split("->")
+            ret[int(label)] = motif
+    return ret
 
 if __name__ == "__main__":
     from config import DATASET_DIR

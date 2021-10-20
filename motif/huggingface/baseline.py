@@ -57,9 +57,6 @@ if __name__ == "__main__":
 
     # print(emb.shape, label.shape)
 
-
-
-
     # roberta_tokenizer = RobertaTokenizer.from_pretrained("roberta-large")
     # roberta_model = RobertaModel.from_pretrained("roberta-large")
     # from tqdm import tqdm

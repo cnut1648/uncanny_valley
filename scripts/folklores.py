@@ -41,7 +41,7 @@ def case_study(folklore_df, emb = "LF", method="plot"):
     """
     look at a few stories related to flood
     and 1. if plot: see there location in t-SNE
-        2. if simialr: compute most similar stories in terms of cos metric
+        2. if similar: compute most similar stories in terms of cos metric
     """
 
     assert method in ["plot", "similar"]

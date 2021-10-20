@@ -1,0 +1,3 @@
+# sentence sim pretrained
+arch: sentence-transformers/paraphrase-distilroberta-base-v2
+seq_len: 512
