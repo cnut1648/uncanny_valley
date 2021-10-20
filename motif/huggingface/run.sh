@@ -10,14 +10,14 @@ source activate valley;
 
 python lm.py model='longformer-base'
 # # 25
-# python fine_tune_clf.py -m model='longformer-base' train.lr=0.00003 train.label_smooth=0.01
+# python fine_tune_clf.py -m module='longformer-base' train.lr=0.00003 train.label_smooth=0.01
 # # 32
-# python fine_tune_clf.py -m model='roberta-large' train.lr=0.00003 train.label_smooth=0
+# python fine_tune_clf.py -m module='roberta-large' train.lr=0.00003 train.label_smooth=0
 
 # tune
-# python fine_tune_clf.py -m model='longformer-base' train.lr='choice(4E-5,1E-6,8E-6,1E-4)' \
+# python fine_tune_clf.py -m module='longformer-base' train.lr='choice(4E-5,1E-6,8E-6,1E-4)' \
 #     train.wd='choice(0.02,0.001)'
 
-# python fine_tune_clf.py -m model='roberta-large' train.lr='choice(4E-5,1E-6,8E-6,1E-4)' \
+# python fine_tune_clf.py -m module='roberta-large' train.lr='choice(4E-5,1E-6,8E-6,1E-4)' \
 #     train.wd='choice(0.02,0.001)'
-# python fine_tune_clf.py -m model='roberta-large' train.lr='choice(1E-5,3E-5,6E-5)' train.label_smooth='choice(0.1,0)'
+# python fine_tune_clf.py -m module='roberta-large' train.lr='choice(1E-5,3E-5,6E-5)' train.label_smooth='choice(0.1,0)'

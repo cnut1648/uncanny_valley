@@ -1,0 +1,2 @@
+arch: allenai/longformer-base-4096
+seq_len: 4096

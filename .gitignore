@@ -13,6 +13,8 @@ datasets
 
 notebooks
 
+**/logs/**
+
 **/outs/**
 .vscode
 **/outs/**
@@ -142,7 +144,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Creepy Data - ignore data, it's too big
+# Creepy Data - ignore datamodules, it's too big
 Creepy\ Data.nosync
 Creepy\ Data
 

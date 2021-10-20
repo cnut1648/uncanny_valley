@@ -30,9 +30,9 @@ from neptunecontrib.monitoring.xgboost import neptune_callback
 #     :param regressor: sklearn regressor
 #     :param params: dict params for regressor
 #     :param alg: either 'xgboost' or 'sklearn'
-#     :param tags: optional tags for neptune exps, by default model name
+#     :param tags: optional tags for neptune exps, by default module name
 #     :param preprocessors: optional preprocessors
-#     :param test_size: size for test data
+#     :param test_size: size for test datamodules
 #     :param random_state: random seed for split
 #     """
 #     data_manager = get_default_data_manager() if preprocessors is None \
@@ -73,7 +73,7 @@ from neptunecontrib.monitoring.xgboost import neptune_callback
 #                 )
 #
 #     submission = pd.read_csv(sample_submission_path)
-#     # refit all data
+#     # refit all datamodules
 #     reg.fit(X, y)
 #     submission.iloc[:, 1] = np.floor(np.expm1(reg.predict(test_features)))
 #
@@ -130,7 +130,7 @@ class Objective:
         else:
             model.fit(self.X_train, self.y_train)
 
-        # y_pred = model.predict(self.X_test)
+        # y_pred = module.predict(self.X_test)
         # return
         # # return np.sqrt(mean_squared_error(self.y_test, y_pred))
 
@@ -147,9 +147,9 @@ def tune(
     """
     :param classifer: sklearn regressor
     :param params: dict params for regressor for tuning
-    :param tags: optional tags for neptune exps, by default model name
+    :param tags: optional tags for neptune exps, by default module name
     :param preprocessors: optional preprocessors
-    :param test_size: size for test data
+    :param test_size: size for test datamodules
     :param random_state: random seed for split
     """
 
@@ -204,18 +204,18 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("task", type=str, choices=["run", "tune"],
                         help="task to run")
-    parser.add_argument("model", type=str, choices=MODEL_CONFIG.keys(),
-                        help="desired model's name")
+    parser.add_argument("module", type=str, choices=MODEL_CONFIG.keys(),
+                        help="desired module's name")
 
     args = parser.parse_args()
 
     alg = "xgboost" if args.model == "xgboost" else "sklearn"
     if args.task == "run":
         pass
-        # model = BEST_MODEL_CONFIG[args.model]
-        # run(model["model"], model["params"],
+        # module = BEST_MODEL_CONFIG[args.module]
+        # run(module["module"], module["params"],
         #     alg, tags=[alg, "run"])
     else:
         model = MODEL_CONFIG[args.model]
-        tune(model["model"], model["params"],
+        tune(model["module"], model["params"],
              alg, tags=[alg, "tune"])

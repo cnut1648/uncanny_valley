@@ -31,7 +31,7 @@ print(tp.vocab[:10])
 ctm = CombinedTM(bow_size=len(tp.vocab), 
     contextual_size=768, n_components=7, 
     num_epochs=20)
-ctm.fit(training_dataset) # run the model
+ctm.fit(training_dataset) # run the module
 
 print(ctm.get_topic_lists(7))
 

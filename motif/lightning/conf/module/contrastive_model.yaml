@@ -1,0 +1,10 @@
+_target_: src.modules.contrastive_model.ContrastiveModule
+defaults:
+  - model@_here_: roberta-large
+  - optim: SGD
+  - scheduler: linear_with_warmup
+
+num_positives: ${datamodule.num_positives}
+num_negatives: ${datamodule.num_negatives}
+
+temperature: 0.05

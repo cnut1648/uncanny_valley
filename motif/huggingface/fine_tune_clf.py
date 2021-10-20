@@ -46,16 +46,16 @@ def createDataset(config):
     also filter out rare *individual ATU*
     """
     df = pd.read_hdf(config.data.h5_file, key=config.data.h5_key)
-    atu = df.loc[df.groupby("atu")["atu"].filter(lambda g: len(g) >= config["data"]["atu_filter_no"]).index]
+    atu = df.loc[df.groupby("atu")["atu"].filter(lambda g: len(g) >= config["datamodules"]["atu_filter_no"]).index]
     atu = atu[["text", "atu", "desc", "label"]]
 
     dataset = Dataset.from_pandas(atu)
-    tokenizer = AutoTokenizer.from_pretrained(config["model"]["arch"])
+    tokenizer = AutoTokenizer.from_pretrained(config["module"]["arch"])
 
     def tokenize(instance):
         return tokenizer(
             instance["text"],
-            max_length=config["model"]["seq_len"],
+            max_length=config["module"]["seq_len"],
             truncation="longest_first",
             padding="max_length")
 
@@ -160,7 +160,7 @@ def plot_heat_map(y_true, y_pred, num_labels):
 
 @hydra.main(config_path="conf", config_name="config")
 def fine_tune(cfg: DictConfig) -> float:
-    """fine tune bert model"""
+    """fine tune bert module"""
     init_wandb(cfg)
     train_ds, test_ds = getDataset(cfg)
 
@@ -174,9 +174,9 @@ def fine_tune(cfg: DictConfig) -> float:
     id = wandb.run.name.rsplit("-", 1)[1]
     trainConfig = cfg.train
     output_dir = os.path.join(trainConfig["output_dir"], id)
-    print("model output dir = ", output_dir)
+    print("module output dir = ", output_dir)
     train_args = TrainingArguments(
-        # model pred/ckpt
+        # module pred/ckpt
         output_dir=output_dir,
         # tensorboard logs
         logging_dir="./logs",
@@ -220,7 +220,7 @@ def fine_tune(cfg: DictConfig) -> float:
     trainer.train()
     trainer.evaluate()
 
-    # best model
+    # best module
     trainer.model.save_pretrained(os.path.join(output_dir, "best"))
     y_pred_tuple = trainer.predict(test_ds)
     logits, y_true, metrics = y_pred_tuple

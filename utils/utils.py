@@ -76,9 +76,9 @@ def write_format_embeddings_comparators(df, indexes=None):
     """
     if indexes is None:
         indexes = ["LF", "SBERT"]
-    with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/vectors_SBERT.tsv", "w") as f_vec_SBERT:
-        with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/vectors_LF.tsv", "w") as f_vec_LF:
-            with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/atu.tsv", "w") as f_atu:
+    with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/vectors_SBERT.tsv", "w") as f_vec_SBERT:
+        with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/vectors_LF.tsv", "w") as f_vec_LF:
+            with open("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/atu.tsv", "w") as f_atu:
                 gb = df.groupby(indexes)
                 for group in gb.groups:
                     r = gb.get_group(group)

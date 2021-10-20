@@ -2,7 +2,7 @@ from xgboost import XGBClassifier
 
 MODEL_CONFIG = {
     "xgboost": {
-        "model": XGBClassifier,
+        "module": XGBClassifier,
         "params": {
             "objective": "multi:softprob",
             "n_estimators": (100, 1000),

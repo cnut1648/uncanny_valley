@@ -5,7 +5,7 @@ defaults:
 train:
     train_batch_size: 4
     eval_batch_size: 4
-    # model output dir
+    # module output dir
     output_dir: ${work_dir}/outs/ckpt
     acc_batch: 4
     epoch: 40
@@ -18,7 +18,7 @@ train:
 
 data:
     atu_filter_no: 0
-    cached_dir: ${dataset_dir}/motif/${model.arch}/filter-${.atu_filter_no}_test-${.test_ratio}
+    cached_dir: ${dataset_dir}/motif/${module.arch}/filter-${.atu_filter_no}_test-${.test_ratio}
     h5_file: ${dataset_dir}/ATU.h5
     h5_key: default
     test_ratio: 0.2
@@ -30,9 +30,9 @@ model:
 logger:
     project: motif
     tags:
-        - ${model.arch}
+        - ${module.arch}
         - fine-tune
-        - filter-${data.atu_filter_no}
+        - filter-${datamodules.atu_filter_no}
     group: fine-tune
 
 seed: 42

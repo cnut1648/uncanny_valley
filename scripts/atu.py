@@ -15,7 +15,7 @@ from utils.utils import getTSNE
 
 def cleanMFTD(df, MFTD, others: list):
     """
-    convert Anthony's MFTD data to library guides
+    convert Anthony's MFTD datamodules to library guides
 
     Parameters
     ----------
@@ -224,23 +224,23 @@ def load_ATU(useHDF5=True):
     merge MFTD & df
      """
     if useHDF5:
-        df = pd.read_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key="SBERT&LF_MERGE")
+        df = pd.read_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/ATU.h5", key="SBERT&LF_MERGE")
 
     else:
         # processing from source and save as h5
 
         # library guides
-        df = pd.read_json("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.jl", lines=True)
+        df = pd.read_json("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/ATU.jl", lines=True)
         df[["LF", "SBERT"]] = df.apply(lambda row: (
             get_SBert_avg(row["text"]),
             get_LF_avg(row["text"])
         ), axis=1, result_type="expand")
         df.at[:, "language"] = "language"
         df.at[:, "from_xml"] = False
-        df.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5", key="SBERT&LF")
+        df.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/ATU.h5", key="SBERT&LF")
 
         # MFTD
-        MFTD = pd.read_csv("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/MFTD.csv")
+        MFTD = pd.read_csv("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/MFTD.csv")
         # TODO
         # right now ignore others
         others = []
@@ -250,11 +250,11 @@ def load_ATU(useHDF5=True):
         MFTD[["LF", "SBERT"]] = MFTD.apply(lambda row: (
             get_SBert_avg(row["text"]),
             get_LF_avg(row["text"])), axis=1, result_type="expand")
-        MFTD.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/MFTD.h5", key="SBERT&LF")
+        MFTD.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/MFTD.h5", key="SBERT&LF")
 
         df = pd.concat([df, MFTD])
         df.reset_index(drop=True, inplace=True)
-        df.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/ATU.h5",
+        df.to_hdf("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/ATU.h5",
                   key="SBERT&LF_MERGE")
 
         print(df.sample(3))

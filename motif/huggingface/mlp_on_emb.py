@@ -138,7 +138,7 @@ if __name__ == '__main__':
     train_ds, test_ds = dataset["train"], dataset['test']
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # model = MLP(hidden_dim=info[emb_str]['hidden_dim']).to(device)
+    # module = MLP(hidden_dim=info[emb_str]['hidden_dim']).to(device)
     model = MLP(layer_sizes=[
         [info[emb_str]['hidden_dim'], 1],
         [info[emb_str]['hidden_dim'] * 2, 2],

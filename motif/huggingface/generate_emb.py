@@ -1,5 +1,5 @@
 """
-generate embedding from fine tuned model
+generate embedding from fine tuned module
 """
 import os
 from collections import namedtuple
@@ -26,12 +26,12 @@ def getDataset(config):
     atu = atu[["text", "atu", "desc"]]
 
     dataset = Dataset.from_pandas(atu)
-    tokenizer = AutoTokenizer.from_pretrained(config["model"]["arch"])
+    tokenizer = AutoTokenizer.from_pretrained(config["module"]["arch"])
 
     def tokenize(instance):
         return tokenizer(
             instance["text"],
-            max_length=config["model"]["seq_len"],
+            max_length=config["module"]["seq_len"],
             truncation=True,
             padding=True)
 
@@ -99,8 +99,8 @@ def main(cfg: DictConfig) -> float:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = AutoModel.from_pretrained(BEST_CKPT)
-    # if roberta-large, same as model itself
-    # if seq cls model, remove head
+    # if roberta-large, same as module itself
+    # if seq cls module, remove head
     model = model.base_model
     model.eval()
     model.zero_grad()

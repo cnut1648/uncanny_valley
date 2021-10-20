@@ -42,7 +42,7 @@ logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
 
 def getDataset(config, tokenizer):
-    # TDATA_PATH = config.data.cached_dir.replace("motif", "motif_lm")
+    # TDATA_PATH = config.datamodules.cached_dir.replace("motif", "motif_lm")
     TDATA_PATH = config.data.cached_dir
     try:
         dataset = load_from_disk(TDATA_PATH)
@@ -100,10 +100,10 @@ def init_wandb(cfg: DictConfig):
 
 @hydra.main(config_path="conf", config_name="config")
 def fine_tune(cfg: DictConfig) -> float:
-    """fine tune bert model"""
+    """fine tune bert module"""
     init_wandb(cfg)
 
-    tokenizer = AutoTokenizer.from_pretrained(cfg["model"]["arch"])
+    tokenizer = AutoTokenizer.from_pretrained(cfg["module"]["arch"])
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer,
         mlm_probability=0.15,
@@ -122,9 +122,9 @@ def fine_tune(cfg: DictConfig) -> float:
     id = wandb.run.name.rsplit("-", 1)[1]
     trainConfig = cfg.train
     output_dir = os.path.join(trainConfig["output_dir"], id)
-    print("model output dir = ", output_dir)
+    print("module output dir = ", output_dir)
     train_args = TrainingArguments(
-        # model pred/ckpt
+        # module pred/ckpt
         output_dir=output_dir,
         # tensorboard logs
         logging_dir="./logs",
@@ -184,13 +184,13 @@ def fine_tune(cfg: DictConfig) -> float:
     trainer.log_metrics("eval", metrics)
     trainer.save_metrics("eval", metrics)
 
-    # best model
+    # best module
     trainer.model.save_pretrained(os.path.join(output_dir, "best"))
     # y_pred_tuple = trainer.predict(test_ds)
     # logits, y_true, metrics = y_pred_tuple
     # y_pred = logits.argmax(-1)
     
-    # plot_heat_map(y_true, y_pred, cfg.model.num_labels)
+    # plot_heat_map(y_true, y_pred, cfg.module.num_labels)
 
     # acc = accuracy_score(y_true, y_pred)
     # print(acc)

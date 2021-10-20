@@ -64,7 +64,7 @@ def main(cfg):
     trainConfig = cfg.train
     output_dir = os.path.join(trainConfig["output_dir"])
     train_args = TrainingArguments(
-        # model pred/ckpt
+        # module pred/ckpt
         output_dir=output_dir,
         # tensorboard logs
         logging_dir="./logs",

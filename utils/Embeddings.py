@@ -133,8 +133,8 @@ def save_Doc2Vec_from_df(df, text_col,
 	model = gensim.models.doc2vec.Doc2Vec(vector_size=vector_size, min_count=min_count, epochs=40)
 	model.build_vocab(corpus)
 	model.train(corpus, total_examples=model.corpus_count, epochs=model.epochs)
-	model.save("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/gensim")
-	model = gensim.models.Doc2Vec.load("/content/drive/MyDrive/Creepy Data/folklores/cleaned data/gensim")
+	model.save("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/gensim")
+	model = gensim.models.Doc2Vec.load("/content/drive/MyDrive/Creepy Data/folklores/cleaned datamodules/gensim")
 
 def get_SBert_from_file(path: Path) -> np.ndarray:
 	with path.open() as f:

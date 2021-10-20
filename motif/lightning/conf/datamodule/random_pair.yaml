@@ -1,0 +1,15 @@
+_target_: src.datamodules.RandomPairDM.RandomPairDM
+
+data_dir: ${data_dir} # data_dir is specified in config.yaml
+train_val_test_split: "80_20_0"
+
+num_positives: 2
+num_negatives: 2
+
+batch_size: 4
+num_workers: 3
+pin_memory: True
+
+arch: ${module.arch}
+seq_len: ${module.seq_len}
+cache_dir: ${data_dir}/cache
