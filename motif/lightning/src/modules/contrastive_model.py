@@ -76,7 +76,7 @@ class ContrastiveModule(LightningModule):
         return loss, cos_sim
 
     def step_end(self, output: tuple, phase: str):
-        loss, cos_sim = output
+        loss, _ = output
         self.log(f"{phase}/step/loss", loss, logger=True,
                  # on_step if train; on_epoch if not train
                  on_step=phase == "train", on_epoch=phase != "train")

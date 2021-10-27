@@ -3,8 +3,11 @@ defaults:
   - model@_here_: roberta-large
   - optim: SGD
   - scheduler: linear_with_warmup
-
 num_positives: ${datamodule.num_positives}
 num_negatives: ${datamodule.num_negatives}
 
 temperature: 0.05
+
+# use in logger group / notes
+group: contrastive
+notes: "contrastive learning with #pos=${.num_positives} / #neg=${.num_negatives}. Model=${.arch}+${.seq_len}"

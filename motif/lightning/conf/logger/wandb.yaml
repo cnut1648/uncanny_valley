@@ -2,14 +2,18 @@
 
 wandb:
   _target_: pytorch_lightning.loggers.wandb.WandbLogger
-  project: "template-tests"
+  project: motif
   name: ${name}
   save_dir: "."
   offline: False # set True to store all logs only locally
   id: null # pass correct id to resume experiment!
   # entity: ""  # set to name of your wandb team or just remove it
   log_model: False
-  prefix: ""
-  job_type: "train"
-  group: ""
-  tags: []
+  save_code: True
+  # prefix: ""
+  # job_type: "train"
+  group: ${module.group}
+  tags: 
+    - ${module.arch}
+
+  notes: ${module.notes}
