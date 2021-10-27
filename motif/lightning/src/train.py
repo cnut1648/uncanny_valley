@@ -41,7 +41,7 @@ def train(config: DictConfig) -> Optional[float]:
         config.module, optcfg=config.module.optim,
         schcfg=getattr(config.module, "scheduler", None),
         _recursive_=False
-     )
+    )
 
     # Init lightning callbacks
     callbacks: List[Callback] = []

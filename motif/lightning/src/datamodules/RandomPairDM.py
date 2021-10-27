@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, Dataset as TDataset
 from torch.utils.data.sampler import Sampler
 from transformers import AutoTokenizer
 
+
 class PairDataset(TDataset):
     def __init__(self,
                  data_source: Dataset,
@@ -73,9 +74,6 @@ class PairDataset(TDataset):
             for k, v in ret.items()
         }
         return ret
-
-
-
 
 
 class RandomPairDM(LightningDataModule):

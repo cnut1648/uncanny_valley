@@ -15,13 +15,13 @@ log = get_logger(__name__)
 
 class ContrastiveModule(LightningModule):
     def __init__(
-        self,
-        arch: str,
-        num_positives: int, num_negatives: int,
-        temperature: float,
-        optcfg: DictConfig,
-        schcfg: Optional[DictConfig] = None,
-        **kwargs,
+            self,
+            arch: str,
+            num_positives: int, num_negatives: int,
+            temperature: float,
+            optcfg: DictConfig,
+            schcfg: Optional[DictConfig] = None,
+            **kwargs,
     ):
         super().__init__()
 
@@ -35,9 +35,9 @@ class ContrastiveModule(LightningModule):
 
         config = AutoConfig.from_pretrained(arch)
         self.transformer = AutoModel.from_config(config)
-            # TODO
-            # custom pooler? like SimCSE
-            # config, add_pooling_layer=True
+        # TODO
+        # custom pooler? like SimCSE
+        # config, add_pooling_layer=True
         # )
         pool_size = self.transformer.config.hidden_size
         self.projection = nn.Linear(pool_size, pool_size)
@@ -62,8 +62,8 @@ class ContrastiveModule(LightningModule):
         # (N, ?, h)
         anchor, pos, neg = (
             pooled_embedding[:, 0:1],
-            pooled_embedding[:, 1:self.num_positives+1],
-            pooled_embedding[:, self.num_positives+1:]
+            pooled_embedding[:, 1:self.num_positives + 1],
+            pooled_embedding[:, self.num_positives + 1:]
         )
         # (N, K-1)
         cos_sim = torch.cat([
@@ -177,4 +177,3 @@ class ContrastiveModule(LightningModule):
                 ret_dict["monitor"] = "valid/epoch/loss"
 
         return ret_dict
-

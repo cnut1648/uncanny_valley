@@ -40,7 +40,7 @@ datamodule:
   _target_: src.datamodules.mnist_datamodule.MNISTDataModule
   data_dir: ${data_dir}
   batch_size: 64
-  train_val_test_split: [55_000, 5_000, 10_000]
+  train_val_test_split: [ 55_000, 5_000, 10_000 ]
   num_workers: 0
   pin_memory: False
 
@@ -61,9 +61,9 @@ callbacks:
 
 logger:
   wandb:
-    tags: ["best_model", "uwu"]
+    tags: [ "best_model", "uwu" ]
     notes: "Description of this module."
   neptune:
-    tags: ["best_model"]
+    tags: [ "best_model" ]
   csv_logger:
     save_dir: "."
