@@ -5,10 +5,10 @@ from typing import List, Sequence
 import pytorch_lightning as pl
 import rich.syntax
 import rich.tree
+from datasets.utils import disable_progress_bar
+from datasets.utils.logging import set_verbosity_error
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.utilities import rank_zero_only
-from datasets.utils.logging import set_verbosity_error
-from datasets.utils import disable_progress_bar
 
 disable_progress_bar()
 

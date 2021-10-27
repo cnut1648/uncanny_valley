@@ -1,17 +1,15 @@
 import pickle
+import random
 from collections import defaultdict
 from pathlib import Path
-import random
-from typing import Optional, Tuple, Sized, Iterable, List, Dict
+from typing import Optional, Tuple, List, Dict
 
 import pandas as pd
 import torch
-import datasets
 from datasets import Dataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset as TDataset
-from torch.utils.data.sampler import Sampler
 from transformers import AutoTokenizer
 
 
