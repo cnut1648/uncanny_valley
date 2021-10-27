@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 import hydra
+import os
 from omegaconf import DictConfig
 from pytorch_lightning import (
     Callback,
@@ -15,6 +16,35 @@ from src.utils import utils
 
 log = utils.get_logger(__name__)
 
+def get_pl_logger(cfg: DictConfig) -> List[LightningLoggerBase]:
+    loggers: List[LightningLoggerBase] = []
+    if "logger" in cfg:
+        for _, lg_conf in cfg["logger"].items():
+            if "_target_" in lg_conf:
+                log.info(f"Instantiating logger <{lg_conf._target_}>")
+                logger = hydra.utils.instantiate(lg_conf)
+                loggers.append(logger)
+                while True:
+                    try:
+                        # sometimes fail for unknown reason
+                        print(logger.experiment)
+                        break
+                    except BaseException:
+                        pass
+
+                if "wandb" in lg_conf["_target_"]:
+                    id = "offline"
+                    if not cfg.debug:
+                        # will upload this run to cloud
+                        log.info(f"wandb url in {logger.experiment.url}")
+                        # get id from x-y-id
+                        id = logger.experiment.name.rsplit('-', 1)[1]
+                        cfg.callback.model_checkpoint.dirpath = os.path.join(
+                            cfg.callback.model_checkpoint.dirpath, id
+                        )
+                    # if debug, not saving checkpoint at all
+                    # since del in `touch`
+    return loggers
 
 def train(config: DictConfig) -> Optional[float]:
     """Contains training pipeline.
@@ -43,21 +73,16 @@ def train(config: DictConfig) -> Optional[float]:
         _recursive_=False
     )
 
+    # Init lightning loggers
+     logger: List[LightningLoggerBase] = get_pl_logger(config)
+
     # Init lightning callbacks
     callbacks: List[Callback] = []
-    # if "callbacks" in config:
-    #     for _, cb_conf in config.callbacks.items():
-    #         if "_target_" in cb_conf:
-    #             log.info(f"Instantiating callback <{cb_conf._target_}>")
-    #             callbacks.append(hydra.utils.instantiate(cb_conf))
-
-    # Init lightning loggers
-    logger: List[LightningLoggerBase] = []
-    if "logger" in config:
-        for _, lg_conf in config.logger.items():
-            if "_target_" in lg_conf:
-                log.info(f"Instantiating logger <{lg_conf._target_}>")
-                logger.append(hydra.utils.instantiate(lg_conf))
+    if "callbacks" in config:
+        for _, cb_conf in config.callbacks.items():
+            if "_target_" in cb_conf:
+                log.info(f"Instantiating callback <{cb_conf._target_}>")
+                callbacks.append(hydra.utils.instantiate(cb_conf))
 
     # Init lightning trainer
     log.info(f"Instantiating trainer <{config.trainer._target_}>")
