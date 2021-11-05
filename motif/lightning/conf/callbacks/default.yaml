@@ -5,8 +5,8 @@ model_checkpoint:
   save_top_k: 1 # save k best modules (determined by above metric)
   save_last: True # additionaly always save module from last epoch
   verbose: False
-  dirpath: "${work_dir}/outs/ckpt/"
-  filename: "epoch_{epoch:03d}-loss_{valid/epoch/loss:.3f}-cos_{valid/epoch/cos_sim:.3f}"
+  dirpath: "${work_dir}/logs/ckpt/"
+  filename: "epoch_{epoch:03d}-loss_{valid/epoch/loss:.3f}"
   auto_insert_metric_name: False
 
 # early_stopping:

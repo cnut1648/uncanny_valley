@@ -6,114 +6,106 @@ from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 from pytorch_lightning.utilities.types import EPOCH_OUTPUT
 from torch import nn
-from transformers import AutoModel, AutoConfig, get_scheduler
+from torch.nn.modules.container import ModuleDict
+from transformers import get_scheduler, AutoModelForSequenceClassification
+from torchmetrics import (
+    MetricCollection, Accuracy,
+    Recall, Precision, F1, AUROC
+)
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix, roc_auc_score
 
 from src.utils.utils import get_logger
 
 log = get_logger(__name__)
 
 
-class ContrastiveModule(LightningModule):
+class FineTuneModule(LightningModule):
     def __init__(
             self,
             arch: str,
-            temperature: float,
-            criterion: str,
             optcfg: DictConfig,
-            num_negatives: int, num_positives: Optional[int] = None,
+            arch_ckpt: Optional[str] = None,
             schcfg: Optional[DictConfig] = None,
             **kwargs,
     ):
         super().__init__()
 
-        # this line ensures params passed to LightningModule will be saved to ckpt
-        # it also allows to access params with 'self.hparams' attribute
-        self.num_negatives = num_negatives
-        self.num_positives = num_positives
         self.schcfg = schcfg
         self.optcfg = optcfg
         self.save_hyperparameters()
 
-        config = AutoConfig.from_pretrained(arch)
-        self.transformer = AutoModel.from_config(config)
-        # TODO
-        # custom pooler? like SimCSE
-        # config, add_pooling_layer=True
-        # )
-        pool_size = self.transformer.config.hidden_size
-        self.projection = nn.Linear(pool_size, pool_size)
+        if arch_ckpt: 
+            arch = arch_ckpt
+        self.transformer = AutoModelForSequenceClassification.from_pretrained(arch, num_labels=7)
 
         # loss function
-        self.cos_sim = torch.nn.CosineSimilarity(dim=-1)
-        self.temperature = temperature
-        if criterion == "InfoNCE":
-            self.criterion = nn.CrossEntropyLoss()
-        elif criterion == "rankloss":
-            self.criterion = nn.MarginRankingLoss(0.02)
-        else:
-            raise NotImplementedError
+        self.criterion = nn.CrossEntropyLoss()
+
+        # metrics
+        mc = MetricCollection({
+            "accuracy": Accuracy(threshold=0.0),
+            "recall": Recall(threshold=0.0, num_classes=7, average='macro'),
+            "precision": Precision(threshold=0.0, num_classes=7, average='macro'),
+            "f1": F1(threshold=0.0, num_classes=7, average='macro'),
+            "macro_auc": AUROC(num_classes=7, average='macro'),
+            # "weighted_auc": AUROC(num_classes=7, average='weighted')
+        })
+        self.metrics: ModuleDict[str, MetricCollection] = ModuleDict({
+            f"{phase}_metric": mc.clone()
+            for phase in ["train", "valid", "test"]
+        })
+
 
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor):
-        return self.transformer(input_ids, attention_mask=attention_mask)
+        output = self.transformer(input_ids, attention_mask=attention_mask)
+        # (N, K)
+        return output['logits']
     
     def step(self, batch: Any):
-        """K = 1 + #pos + #neg"""
-        N, K, L = batch['input_ids'].shape
-        pool_size = self.transformer.config.hidden_size
-        assert K == 1 + self.num_negatives + self.num_positives
-        input_ids = batch['input_ids'].view(N * K, L)
-        attention_mask = batch['attention_mask'].view(N * K, L)
-        pooled_embedding = self.forward(input_ids, attention_mask)
-        pooled_embedding = pooled_embedding['pooler_output'].view(N, K, pool_size)
-
-        # (N, ?, h)
-        anchor, pos, neg = (
-            pooled_embedding[:, 0:1],
-            pooled_embedding[:, 1:self.num_positives + 1],
-            pooled_embedding[:, self.num_positives + 1:]
-        )
-        # (N, K-1)
-        cos_sim = torch.cat([
-            self.cos_sim(anchor, pos) / self.temperature,
-            self.cos_sim(anchor, neg) / self.temperature,
-        ], dim=1)
-        if type(self.criterion).__name__ == "MarginRankingLoss":
-            indicator = torch.ones(N).type_as(anchor)
-            loss = torch.stack([
-                self.criterion(cos_sim[:, 0], cos_sim[:, i], indicator)
-                for i in range(1, K-1)
-            ]).mean()
-        elif type(self.criterion).__name__ == "CrossEntropyLoss":
-            loss = self.criterion(
-                cos_sim, torch.zeros(N).type_as(cos_sim).long()
-            )
-
-        return loss, cos_sim.detach()
+        # (N, K)
+        logits = self(batch['input_ids'], batch['attention_mask'])
+        loss = self.criterion(logits, batch['label'])
+        prob = logits.softmax(dim=1)
+        return loss, prob.detach()
 
     def step_end(self, output: tuple, phase: str):
         loss = output['loss']
         self.log(f"{phase}/step/loss", loss, logger=True,
                  # on_step if train; on_epoch if not train
                  on_step=phase == "train", on_epoch=phase != "train")
+        metrics = self.metrics[f"{phase}_metric"]
+        metrics(output['prob'], output['label'])
 
     def agg_epoch(self, outputs: EPOCH_OUTPUT, phase: str):
         loss = torch.stack([o['loss'] for o in outputs]).mean()
         self.log(f"{phase}/epoch/loss", loss)
+        # (N, K)
+        probs = torch.cat([o['prob'] for o in outputs])
+        # (N, )
+        labels = torch.cat([o['label'] for o in outputs])
+        metrics = self.metrics[f"{phase}_metric"]
 
-        # (\sum N, K-1)
-        cos_sim = torch.cat([
-            o['cos_sim'] for o in outputs
-        ], dim=0)
+        y_true = labels.detach().cpu().numpy()
+        y_prob = probs.detach().cpu().numpy()
+        macro_auc = roc_auc_score(y_true, y_prob, average="macro", multi_class="ovo")
+        weight_auc = roc_auc_score(y_true, y_prob, average="weighted", multi_class="ovo")
+        self.log(f"{phase}/epoch/scikit-macro-auc", macro_auc, logger=True, prog_bar=True,
+                     # on_step if train; on_epoch if not train
+                     on_step=False, on_epoch=True)
+        self.log(f"{phase}/epoch/scikit-weight-auc", weight_auc, logger=True, prog_bar=True,
+                     # on_step if train; on_epoch if not train
+                     on_step=False, on_epoch=True)
 
-        # want 0th col cos sim higher than other
-        diff = cos_sim[:, 0].mean() - cos_sim[:, 1:].mean()
-        self.log(f"{phase}/epoch/cos_sim", diff, logger=True, prog_bar=True,
-                 # on_step if train; on_epoch if not train
-                 on_step=False, on_epoch=True)
+        for metric_name, metric in metrics.items():
+            self.log(f"{phase}/epoch/{metric_name}", metric.compute(), logger=True, prog_bar=True,
+                     # on_step if train; on_epoch if not train
+                     on_step=False, on_epoch=True)
+
+
 
     def training_step(self, batch: Dict, batch_idx: int):
-        loss, cos_sim = self.step(batch)
-        return {"loss": loss, "cos_sim": cos_sim}
+        loss, prob = self.step(batch)
+        return {"loss": loss, "prob": prob, 'label': batch['label']}
 
     def training_step_end(self, outputs: tuple) -> tuple:
         self.step_end(outputs, "train")
@@ -123,8 +115,8 @@ class ContrastiveModule(LightningModule):
         self.agg_epoch(outputs, "train")
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, cos_sim = self.step(batch)
-        return {"loss": loss, "cos_sim": cos_sim}
+        loss, prob = self.step(batch)
+        return {"loss": loss, "prob": prob, 'label': batch['label']}
 
     def validation_step_end(self, outputs: tuple) -> tuple:
         self.step_end(outputs, "valid")
@@ -191,6 +183,9 @@ class ContrastiveModule(LightningModule):
                 }
                 ret_dict["lr_scheduler"] = scheduler
                 # TODO : change
+                # return [optimizer], [scheduler]
                 ret_dict["monitor"] = "valid/epoch/loss"
+            else:
+                raise NotImplementedError
 
         return ret_dict

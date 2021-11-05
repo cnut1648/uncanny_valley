@@ -26,7 +26,8 @@ work_dir: ${hydra:runtime.cwd}
 
 # path to folder with data
 #data_dir: ${work_dir}/../../dataset/
-data_dir: /home/chris/test/uncanny_valley/datasets
+# data_dir: /home/chris/test/uncanny_valley/datasets
+data_dir: /home/jiashu/uncanny_valley/datasets
 
 # pretty print config at the start of the run using Rich library
 print_config: True

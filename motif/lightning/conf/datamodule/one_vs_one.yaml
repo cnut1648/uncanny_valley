@@ -1,10 +1,10 @@
-_target_: src.datamodules.RandomPairDM.RandomPairDM
+_target_: src.datamodules.OneVsOneDM.OneVsOneDM
 
 data_dir: ${data_dir} # data_dir is specified in config.yaml
 train_val_test_split: "80_20_0"
 
-num_positives: 2
-num_negatives: 5
+num_positives: 1
+num_negatives: 6
 
 batch_size: 2
 num_workers: 3
@@ -14,4 +14,4 @@ arch: ${module.arch}
 seq_len: ${module.seq_len}
 cache_dir: ${data_dir}/cache
 
-notes: "with #pos=${.num_positives} / #neg=${.num_negatives} bsz=${.batch_size}"
+notes: "OneVsOne data with bsz=${.batch_size}"

@@ -1,0 +1,36 @@
+# @package _global_
+
+# to execute this experiment run:
+# python run.py experiment=example_full.yaml
+
+defaults:
+  - override /module: fine_tune_model
+  - override /datamodule: fine_tune
+
+# we override default configurations with nulls to prevent them from loading at all
+# instead we define all modules and their paths directly in this config,
+# so everything is stored in one place
+
+seed: 0
+
+datamodule:
+  # in ruby best for roberta
+  batch_size: 16
+
+module:
+  module/model@module: roberta-large
+  module.arch_ckpt: null
+
+
+trainer:
+  max_epochs: 30
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 2
+  weights_summary: "top"
+  # resume_from_checkpoint: ${work_dir}/last.ckpt
+
+callbacks:
+  model_checkpoint:
+    monitor: "valid/epoch/accuracy"
+    mode: "max"
+    filename: "epoch_{epoch:03d}-loss_{valid/epoch/loss:.3f}-acc_{valid/epoch/accuracy:.3f}"

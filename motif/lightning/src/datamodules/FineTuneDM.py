@@ -13,79 +13,14 @@ from torch.utils.data import DataLoader, Dataset as TDataset
 from transformers import AutoTokenizer
 
 
-class PairDataset(TDataset):
-    def __init__(self,
-                 data_source: Dataset,
-                 num_positives: int, num_negatives: int,
-                 shuffle: bool = False):
-        """
-        data_source: already ed Dataset.Dataset
-        thus ele = torch tensor
-        """
-        super().__init__()
-        self.num_negatives = num_negatives
-        self.num_positives = num_positives
-        self.data_source = data_source
-        # track which is already done
-        # goal is go thru all
-        # if shuffle: random.shuffle(self.idxs)
-
-    def __getitem__(self, idx):
-        """
-        Returns:
-            idx anchor, #pos positive (same class), #neg negative (diff class)
-        """
-        label = self.data_source[idx]['label']
-        positive_samples = self.data_source.filter(
-            lambda x: x['label'] == label
-        )
-        random_pos = random.sample(range(len(positive_samples)), self.num_positives)
-
-        negative_samples = self.data_source.filter(
-            lambda x: x['label'] != label
-        )
-        random_neg = random.sample(range(len(negative_samples)), self.num_negatives)
-
-        return self.data_source[[idx]], positive_samples[random_pos], negative_samples[random_neg]
-
-    def __len__(self):
-        return len(self.data_source)
-
-    @staticmethod
-    def collate_fn(batches: List[Tuple[Dict, Dict, Dict]]) -> Dict:
-        """
-        let K = 1 + #pos + #neg
-        Returns:
-            dict of keys
-                label: (N, K)
-                attention_mask: (N, K, L)
-                input_ids: (N, K, L)
-        """
-        ret = defaultdict(list)
-        # 3 dict
-        for anchor, positives, negatives in batches:
-            for k in anchor:
-                value = torch.cat([anchor[k], positives[k], negatives[k]], dim=0).unsqueeze(0)
-                ret[k].append(value)
-        ret = {
-            k: torch.cat(v, dim=0)
-            for k, v in ret.items()
-        }
-        return ret
-
-
-class RandomPairDM(LightningDataModule):
+class FineTuneDM(LightningDataModule):
     """
-    supervised contrastive learning datamodule
-    generated batch of (N, num_neg+num_pos+1),
-        where 1st one the anchor, then positive (same label), rest negative (diff label)
-
+    Fine tune LM
     """
 
     def __init__(
             self,
             data_dir: str, train_val_test_split: str,
-            num_positives: int = 1, num_negatives: int = 1,
             # dataloading
             batch_size: int = 64, num_workers: int = 0, pin_memory: bool = False,
             # tokenization
@@ -99,8 +34,6 @@ class RandomPairDM(LightningDataModule):
             arch, use_fast=True
         )
         self.cache_dir = cache_dir
-        self.num_negatives = num_negatives
-        self.num_positives = num_positives
         self.data_dir = Path(data_dir)
         self.train_val_test_split = train_val_test_split
         self.batch_size = batch_size
@@ -150,8 +83,6 @@ class RandomPairDM(LightningDataModule):
                 max_length=self.seq_len,
                 truncation=True,
                 padding=True)
-            # truncation="longest_first",
-            # padding="max_length")
 
         if stage == "fit":
             split_index_file = self.data_dir / f"{self.train_val_test_split}.pkl"
@@ -173,16 +104,12 @@ class RandomPairDM(LightningDataModule):
                     # dataset = dataset.map(tokenize, batched=True)
                     dataset.save_to_disk(f"{self.cache_dir}/{split}")
                     dataset.set_format(type='torch', columns=['input_ids', 'attention_mask', 'label'])
-                    dataset = PairDataset(
-                        dataset,
-                        num_negatives=self.num_negatives, num_positives=self.num_positives)
 
                     self.datasets[split] = DataLoader(
                         dataset,
                         batch_size=self.batch_size,
                         num_workers=self.num_workers,
                         pin_memory=self.pin_memory,
-                        collate_fn=PairDataset.collate_fn,
                         shuffle=(split == "train"),
                     )
 

@@ -1,0 +1,12 @@
+_target_: src.modules.finetune_model.FineTuneModule
+defaults:
+  - model@_here_: roberta-large
+  - optim: AdamW
+  - scheduler: linear_with_warmup
+
+# if use contrastive learned ckpt, override arch
+arch_ckpt: null
+
+# use in logger group / notes
+group: fine-tune
+notes: "fine tune learning model=${.arch}+${.seq_len}, lr=${.optim.lr}, wd=${.optim.weight_decay}"

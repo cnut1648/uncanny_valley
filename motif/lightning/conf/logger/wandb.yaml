@@ -2,7 +2,7 @@
 
 wandb:
   _target_: pytorch_lightning.loggers.wandb.WandbLogger
-  project: motif
+  project: valley
   name: ${name}
   save_dir: "."
   offline: False # set True to store all logs only locally
@@ -16,4 +16,4 @@ wandb:
   tags: 
     - ${module.arch}
 
-  notes: ${module.notes}
+  notes: "${module.notes}::${datamodule.notes}"
