@@ -1,0 +1,7 @@
+Anecdotes and Jokes->0
+Animal Tales->1
+Formula Tales->2
+Realisitc Tales->3
+Religious Tales->4
+Stupid Ogre->5
+Tales of Magic->6

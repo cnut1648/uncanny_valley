@@ -6,6 +6,20 @@ Install the dependencies via `requirements.txt`, and the dataset are downloaded 
 
 Once the two `h5` files are downloaded, `mv` them to `datasets`.
 
+HDF files require a key to access the data. The key for both `h5` are `default`.
+For example, load the data by
+```python
+import pandas as pd
+import h5py
+
+DATASET_DIR = "ATU.h5"
+with h5py.File(DATASET_DIR) as f:
+    print(f.keys())
+atu = pd.read_hdf(
+    DATASET_DIR, key="default"
+)
+```
+
 # Folder Hierarchy
 
 Folders:
