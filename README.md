@@ -1,65 +1,12 @@
-```
-# 82.55813953488372
-# https://wandb.ai/cnut1648/folklore/runs/1t2sfytd/logs?workspace=user-cnut1648
-# tokenizer len = 128
-# BEST_CKPT = "/home/jiashu/uncanny_valley/motif/huggingface/outs/ckpt/20/checkpoint-950"
+# Installment
 
+Install the dependencies via `requirements.txt`, and the dataset are downloaded via
+- [ATU](https://drive.google.com/file/d/185gO3EI95-__pchdmJOMMprEl4JWppiU/view?usp=sharing)
+- [folklore](https://drive.google.com/file/d/1dXdm2tI5EL-nTIPEYg4HO6cpWwTeKQKx/view?usp=sharing)
 
-# tokenizer len = 512
-https://wandb.ai/cnut1648/folklore/runs/33lkrudp/overview?workspace=user-cnut1648
-BEST_CKPT = "/home/jiashu/uncanny_valley/motif/huggingface/outs/ckpt/30/checkpoint-183"
+Once the two `h5` files are downloaded, `mv` them to `datasets`.
 
-
-# new dataset
-
-
-# 0.8522
-roberta
-https://wandb.ai/cnut1648/motif/runs/3ffta2u6/overview?workspace=user-cnut1648
-BEST_CKPT = "/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/32"
-/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-10_test-0.2
-
-https://wandb.ai/cnut1648/motif/runs/27u0cwev?workspace=user-cnut1648
-0.8571428571428571
-BEST_CKPT = "/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/72"
-/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-10_test-0.2
-
-LF
-https://wandb.ai/cnut1648/motif/runs/2ll4vfnb/overview?workspace=user-cnut1648
-0.8768472906403941
-TDATA_PATH = "/home/jiashu/uncanny_valley/datasets/motif/allenai/longformer-base-4096/filter-10_test-0.2"
-ckpt_path = "/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/25"
-
-https://wandb.ai/cnut1648/motif/runs/3pywz91i?workspace=user-cnut1648
-0.8768472906403941
-TDATA_PATH = "/home/jiashu/uncanny_valley/datasets/motif/allenai/longformer-base-4096/filter-10_test-0.2"
-ckpt_path = "/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/79"
-
-
-
-no filter
-ROBERTA
-https://wandb.ai/cnut1648/motif/runs/3u2c26zj
-0.8167
-"/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/88"
-/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-0_test-0.2
-
-
-ROBERTA
-https://wandb.ai/cnut1648/motif/runs/3bgom5bw?workspace=user-cnut1648
-0.8063
-"/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/91"
-/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-0_test-0.2
-
-LF
-https://wandb.ai/cnut1648/motif/runs/azifesfw?workspace=user-cnut1648
-0.8115
-"/home/jiashu/uncanny_valley/motif/huggingface/selected_ckpt/99"
-/home/jiashu/uncanny_valley/datasets/motif/roberta-large/filter-0_test-0.2
-```
-
-
-# folder hierarchy
+# Folder Hierarchy
 
 Folders:
 
@@ -71,15 +18,29 @@ Folders:
   2. [round number index](https://en.wikipedia.org/wiki/List_of_folk_songs_by_Roud_number?oldformat=true)
   3. [library guides](https://libraryguides.missouri.edu/c.php?g=1052498&p=7642280) For ATU index dataset
 
-- `datasets` contains the datasets
-
-  Use DVC to version track the dataset
-
 - `utils` contains some helper functions and scripts
 
+- `motif` contains code to fine tune transformer on the downstream task of folklore tagging
 
+- `datasets` contains the dataset split and label mapping for ATU index.
 
-Nerve Sparing Left and Right
+# Reproduction
+
+To reproduce our experiments on ATU dataset, please refer to `motif` folder. We provide two modules to leverage transformers to tackle folklore tagging problem.
+
+The first is using `motif/huggingface` which use [`huggingface`](https://huggingface.co/) trainer; the second (and the more fine-grained thus the more recommended one) `motif/lightning` which uses [`pytorch lightning`](https://www.pytorchlightning.ai/).
+
+To launch `huggingface` one, simply run `fine_tune_clf.py`; to launch pytorch lightning one, use the [hydra syntax](https://hydra.cc/docs/next/advanced/override_grammar/basic/). For example, 
+```shell
+python run.py \
+    experiment=fine_tune \
+    module.optim.lr=0.00003 \
+    module.optim.weight_decay=0.02 \
+    trainer.max_epochs=20
+```
+which will fine tune the transformer arch `roberta-large` (you can change by selecting different arch in `motif/lightning/conf/module/model`)
+
+Note that you might need to change the path to link to `ATU.h5`, for example changing `data_dir` in `motif/lightning/conf/config.yaml`
 
 # Mythology
 
