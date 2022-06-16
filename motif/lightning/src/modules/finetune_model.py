@@ -34,7 +34,7 @@ class FineTuneModule(LightningModule):
         self.optcfg = optcfg
         self.save_hyperparameters()
 
-        if arch_ckpt: 
+        if arch_ckpt:
             arch = arch_ckpt
         self.transformer = AutoModelForSequenceClassification.from_pretrained(arch, num_labels=7)
 
@@ -55,13 +55,18 @@ class FineTuneModule(LightningModule):
             for phase in ["train", "valid", "test"]
         })
 
-
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor):
         output = self.transformer(input_ids, attention_mask=attention_mask)
         # (N, K)
         return output['logits']
     
-    def step(self, batch: Any):
+    def step(self, batch: Any, batch_idx: int):
+        if self.do_augumentation:
+            text = batch.pop('text')
+            batch.update(
+                self.tokenizer(text, padding="max_length", truncation=True, return_tensors='pt')
+            )
+            batch = self.transfer_batch_to_device(batch, device=self.device, dataloader_idx=batch_idx)
         # (N, K)
         logits = self(batch['input_ids'], batch['attention_mask'])
         loss = self.criterion(logits, batch['label'])
@@ -101,10 +106,8 @@ class FineTuneModule(LightningModule):
                      # on_step if train; on_epoch if not train
                      on_step=False, on_epoch=True)
 
-
-
     def training_step(self, batch: Dict, batch_idx: int):
-        loss, prob = self.step(batch)
+        loss, prob = self.step(batch, batch_idx)
         return {"loss": loss, "prob": prob, 'label': batch['label']}
 
     def training_step_end(self, outputs: tuple) -> tuple:
@@ -115,7 +118,7 @@ class FineTuneModule(LightningModule):
         self.agg_epoch(outputs, "train")
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, prob = self.step(batch)
+        loss, prob = self.step(batch, batch_idx)
         return {"loss": loss, "prob": prob, 'label': batch['label']}
 
     def validation_step_end(self, outputs: tuple) -> tuple:
@@ -133,8 +136,8 @@ class FineTuneModule(LightningModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         if stage == 'fit':
-            tokenizer = self.trainer.datamodule.tokenizer
-            self.transformer.resize_token_embeddings(len(tokenizer))
+            self.tokenizer = self.trainer.datamodule.tokenizer
+            self.transformer.resize_token_embeddings(len(self.tokenizer))
 
             train_loader = self.trainer.datamodule.train_dataloader()
 
@@ -143,6 +146,8 @@ class FineTuneModule(LightningModule):
                                     max(1, self.trainer.num_gpus) * self.trainer.accumulate_grad_batches)
             self.total_steps = int(
                 (len(train_loader.dataset) // effective_batch_size) * float(self.trainer.max_epochs))
+            
+            self.do_augumentation = self.trainer.datamodule.aug_list is not None
 
     def configure_optimizers(self):
         no_decay = ['bias', 'LayerNorm.weight']

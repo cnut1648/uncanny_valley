@@ -173,3 +173,5 @@ Code/Download
 Code/.vector_cache
 
 neuralcoref
+
+motif/lightning/utils/*.pkl

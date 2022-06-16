@@ -15,18 +15,21 @@ seed: 0
 
 datamodule:
   # in ruby best for roberta
-  batch_size: 16
+  # batch_size: 16
+  # in ron
+  batch_size: 2
 
 module:
   module/model@module: roberta-large
   module.arch_ckpt: null
-
+  optim.lr: 0.00003
 
 trainer:
   max_epochs: 30
   gradient_clip_val: 1.0
-  accumulate_grad_batches: 2
+  accumulate_grad_batches: 16
   weights_summary: "top"
+  # stochastic_weight_avg: true
   # resume_from_checkpoint: ${work_dir}/last.ckpt
 
 callbacks:

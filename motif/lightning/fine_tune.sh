@@ -1,6 +1,7 @@
 #!/bin/bash
-#SBATCH --gres=gpu:6000:1
-#SBATCH -t 720
+#SBATCH --gres=gpu:1080:1
+#SBATCH --nodelist=ink-ron
+#SBATCH -t 1720
 #SBATCH -n 1
 #SBATCH --export=ALL,LD_LIBRARY_PATH='/usr/local/cuda-10.1/lib64/'
 #SBATCH -o logs/slurm/fine-tune::%j.log
@@ -28,14 +29,14 @@ source activate valley;
 
 
 # roberta
-python run.py \
-    datamodule=fine_tune \
-    module=fine_tune_model \
-    module/model@module='roberta-large' \
-    module.arch_ckpt='/home/jiashu/uncanny_valley/motif/lightning/outs/ckpt/170/LM' \
-    module.optim.lr=0.00003 \
-    module.optim.weight_decay=0.02 \
-    trainer.max_epochs=20
+# python run.py \
+#     datamodule=fine_tune \
+#     module=fine_tune_model \
+#     module/model@module='roberta-large' \
+#     module.arch_ckpt='/home/jiashu/uncanny_valley/motif/lightning/outs/ckpt/170/LM' \
+#     module.optim.lr=0.00003 \
+#     module.optim.weight_decay=0.02 \
+#     trainer.max_epochs=20
 
 ####################################################################################################
 # lr search fine tune
@@ -44,9 +45,12 @@ python run.py \
 # python run.py -m \
 #     experiment=fine_tune \
 #     hparams_search=lr \
-#     module/model@module='roberta-large' \
-#     module.arch_ckpt='/home/jiashu/uncanny_valley/motif/lightning/logs/ckpt/170/LM'
+#     module/model@module='roberta-large'
+    # module.arch_ckpt='/home/jiashu/uncanny_valley/motif/lightning/logs/ckpt/170/LM'
 
+python run.py -m \
+    experiment=fine_tune \
+    module/model@module='roberta-large'
 
 # echo "fine tune from rank loss"
 # python run.py -m \
